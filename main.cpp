@@ -8,7 +8,7 @@
 
 using namespace std;
 
-const int frequency = 94600000;
+int frequency = 94600000;
 const int sample_rate = 1152000;
 const int gain = 0;
 const int buffer_size = 196608;
@@ -56,6 +56,16 @@ void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio)
     }
 }
 
+void input_thread(rtlsdr_dev_t *device) {
+    double input_mhz;
+    while (true) {
+        cin >> input_mhz;
+        int new_freq = (int)(input_mhz * 1000000);
+        rtlsdr_set_center_freq(device, new_freq);
+        cout << "Zmieniono stacje na: " << input_mhz << " MHz" << endl;
+    }
+}
+
 int main() {
     rtlsdr_dev_t *device = nullptr;
     int device_index = 0;
@@ -85,6 +95,10 @@ int main() {
     vector<uint8_t> buffer(buffer_size);
     vector<float> audio_buffer;
     int n_read = 0; // ile zostalo odczytane
+
+    cout << "Wpisz czestotliwosc w MHz i nacisnij Enter: " << endl;
+    thread console_thread(input_thread, device);
+    console_thread.detach();
 
     while (true) {
         rtlsdr_read_sync(device, buffer.data(), buffer.size(), &n_read);
