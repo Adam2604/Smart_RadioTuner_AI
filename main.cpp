@@ -15,6 +15,11 @@ const int buffer_size = 196608;
 const int decimation = 24; // bierze co 24 pare
 const int audio_rate = 48000;
 
+const vector<float> FIR_COEFFS = {
+    -0.014f, -0.024f, 0.0f, 0.058f, 0.144f, 0.233f, 0.268f,
+    0.233f, 0.144f, 0.058f, 0.0f, -0.024f, -0.014f
+};
+
 double previous_phase = 0.0;
 double previous_audio = 0.0;
 
@@ -24,6 +29,23 @@ void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio)
     static double phase_sum = 0.0;
     static int count = 0;
     double PI = 3.14159265358979323846;
+
+    static vector<float> audio_history(FIR_COEFFS.size(), 0.0f);
+    if (count == decimation) {
+        float raw_audio = (float)((phase_sum / count) * 3.0);
+
+        audio_history.insert(audio_history.begin(), raw_audio);
+        audio_history.pop_back();
+        float fir_out = 0.0f;
+        for (size_t j = 0; j < FIR_COEFFS.size(); j++) {
+            fir_out += audio_history[j] * FIR_COEFFS[j];
+        }
+        float final_audio = (fir_out * 0.2f) + (previous_audio * 0.8f);
+        previous_audio = final_audio;
+        output_audio.push_back(final_audio);
+        phase_sum = 0.0;
+        count = 0;
+    }
 
     for (size_t i = 0; i < input_iq.size(); i += 2) {
         double I = (double)input_iq[i] - 127.5;
