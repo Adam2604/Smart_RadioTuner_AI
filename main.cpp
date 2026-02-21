@@ -9,29 +9,50 @@
 using namespace std;
 
 const int frequency = 94600000;
-const int sample_rate = 2048000;
+const int sample_rate = 1152000;
 const int gain = 0;
-const int buffer_size = 16 * 16384;
+const int buffer_size = 196608;
 const int decimation = 24; // bierze co 24 pare
-const int audio_rate = (sample_rate / 2) / decimation;
+const int audio_rate = 48000;
 
 double previous_phase = 0.0;
+double previous_audio = 0.0;
 
-void demodulate_fm(const vector<uint8_t> &input_iq, vector<float> &output_audio) {
+void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio) {
     output_audio.clear();
-    const double PI = 3.14159265358979323846;
+
+    static double phase_sum = 0.0;
+    static int count = 0;
+    double PI = 3.14159265358979323846;
 
     for (size_t i = 0; i < input_iq.size(); i += 2) {
         double I = (double)input_iq[i] - 127.5;
-        double Q = (double)input_iq[i + 1] - 127.5;
+        double Q = (double)input_iq[i+1] - 127.5;
+
         double current_phase = atan2(Q, I);
         double phase_diff = current_phase - previous_phase;
-        // Korekta granicy kóła, zapobiega ogromnym trzaskom, gdy kąt przeskakuje z -179 na +179
-        while (phase_diff > PI) phase_diff -= 2 * PI;
+
+        while (phase_diff > PI)  phase_diff -= 2 * PI;
         while (phase_diff < -PI) phase_diff += 2 * PI;
+
         previous_phase = current_phase;
 
-        output_audio.push_back((float)phase_diff);
+        phase_sum += phase_diff;
+        count++;
+
+        if (count == decimation) {
+            // Surowy dźwięk
+            float raw_audio = (float)((phase_sum / count) * 2.0);
+
+            // Filtr deemfazy
+            float filtered_audio = (raw_audio * 0.2f) + (previous_audio * 0.8f);
+            previous_audio = filtered_audio;
+
+            output_audio.push_back(filtered_audio);
+
+            phase_sum = 0.0;
+            count = 0;
+        }
     }
 }
 
