@@ -5,6 +5,7 @@
 #include <thread>
 #include <chrono>
 #include <portaudio.h>
+#include "WavWriter.h"
 
 using namespace std;
 
@@ -29,23 +30,7 @@ void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio)
     static double phase_sum = 0.0;
     static int count = 0;
     double PI = 3.14159265358979323846;
-
     static vector<float> audio_history(FIR_COEFFS.size(), 0.0f);
-    if (count == decimation) {
-        float raw_audio = (float)((phase_sum / count) * 3.0);
-
-        audio_history.insert(audio_history.begin(), raw_audio);
-        audio_history.pop_back();
-        float fir_out = 0.0f;
-        for (size_t j = 0; j < FIR_COEFFS.size(); j++) {
-            fir_out += audio_history[j] * FIR_COEFFS[j];
-        }
-        float final_audio = (fir_out * 0.2f) + (previous_audio * 0.8f);
-        previous_audio = final_audio;
-        output_audio.push_back(final_audio);
-        phase_sum = 0.0;
-        count = 0;
-    }
 
     for (size_t i = 0; i < input_iq.size(); i += 2) {
         double I = (double)input_iq[i] - 127.5;
@@ -58,20 +43,26 @@ void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio)
         while (phase_diff < -PI) phase_diff += 2 * PI;
 
         previous_phase = current_phase;
-
         phase_sum += phase_diff;
         count++;
 
         if (count == decimation) {
-            // Surowy dźwięk
-            float raw_audio = (float)((phase_sum / count) * 2.0);
+            float raw_audio = (float)((phase_sum / count) * 3.0);
 
-            // Filtr deemfazy
-            float filtered_audio = (raw_audio * 0.2f) + (previous_audio * 0.8f);
-            previous_audio = filtered_audio;
+            // Filtr FIR
+            audio_history.insert(audio_history.begin(), raw_audio);
+            audio_history.pop_back();
 
-            output_audio.push_back(filtered_audio);
+            float fir_out = 0.0f;
+            for (size_t j = 0; j < FIR_COEFFS.size(); j++) {
+                fir_out += audio_history[j] * FIR_COEFFS[j];
+            }
 
+            // Deemfaza
+            float final_audio = (fir_out * 0.2f) + (previous_audio * 0.8f);
+            previous_audio = final_audio;
+
+            output_audio.push_back(final_audio);
             phase_sum = 0.0;
             count = 0;
         }
@@ -122,9 +113,12 @@ int main() {
     thread console_thread(input_thread, device);
     console_thread.detach();
 
+    WavWriter wav("pierwsze_nagranie.wav");
+
     while (true) {
         rtlsdr_read_sync(device, buffer.data(), buffer.size(), &n_read);
         demodulate_fm(buffer, audio_buffer);
+        wav.write(audio_buffer);
         Pa_WriteStream(stream, audio_buffer.data(), audio_buffer.size());
     }
 
