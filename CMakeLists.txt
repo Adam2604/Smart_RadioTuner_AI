@@ -21,7 +21,9 @@ else()
 endif()
 
 find_package(FFTW3 CONFIG REQUIRED)
-add_executable(Smart_Tuner_AI main.cpp)
+add_executable(Smart_Tuner_AI main.cpp
+        WavWriter.cpp
+        WavWriter.h)
 target_include_directories(Smart_Tuner_AI PRIVATE
         ${RTLSDR_INCLUDE_DIR}
         ${PORTAUDIO_INCLUDE_DIR}
