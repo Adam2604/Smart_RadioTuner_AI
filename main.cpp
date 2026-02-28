@@ -24,6 +24,8 @@ const vector<float> FIR_COEFFS = {
 double previous_phase = 0.0;
 double previous_audio = 0.0;
 
+bool keep_running = true;
+
 void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio) {
     output_audio.clear();
 
@@ -73,6 +75,11 @@ void input_thread(rtlsdr_dev_t *device) {
     double input_mhz;
     while (true) {
         cin >> input_mhz;
+        if (input_mhz == 0.0) {
+            keep_running = false;
+            cout << "Zamykanie programu i zapisywanie pliku..." << endl;
+            break;
+        }
         int new_freq = (int)(input_mhz * 1000000);
         rtlsdr_set_center_freq(device, new_freq);
         cout << "Zmieniono stacje na: " << input_mhz << " MHz" << endl;
@@ -109,13 +116,13 @@ int main() {
     vector<float> audio_buffer;
     int n_read = 0; // ile zostalo odczytane
 
-    cout << "Wpisz czestotliwosc w MHz i nacisnij Enter: " << endl;
+    cout << "Wpisz czestotliwosc (lub 0 zeby wyjsc) w MHz i nacisnij Enter: " << endl;
     thread console_thread(input_thread, device);
     console_thread.detach();
 
     WavWriter wav("pierwsze_nagranie.wav");
 
-    while (true) {
+    while (keep_running) {
         rtlsdr_read_sync(device, buffer.data(), buffer.size(), &n_read);
         demodulate_fm(buffer, audio_buffer);
         wav.write(audio_buffer);
