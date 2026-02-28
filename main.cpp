@@ -6,6 +6,7 @@
 #include <chrono>
 #include <portaudio.h>
 #include "WavWriter.h"
+#include "filter.h"
 
 using namespace std;
 
@@ -15,11 +16,6 @@ const int gain = 0;
 const int buffer_size = 196608;
 const int decimation = 24; // bierze co 24 pare
 const int audio_rate = 48000;
-
-const vector<float> FIR_COEFFS = {
-    -0.014f, -0.024f, 0.0f, 0.058f, 0.144f, 0.233f, 0.268f,
-    0.233f, 0.144f, 0.058f, 0.0f, -0.024f, -0.014f
-};
 
 double previous_phase = 0.0;
 double previous_audio = 0.0;
@@ -52,13 +48,8 @@ void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio)
             float raw_audio = (float)((phase_sum / count) * 3.0);
 
             // Filtr FIR
-            audio_history.insert(audio_history.begin(), raw_audio);
-            audio_history.pop_back();
-
-            float fir_out = 0.0f;
-            for (size_t j = 0; j < FIR_COEFFS.size(); j++) {
-                fir_out += audio_history[j] * FIR_COEFFS[j];
-            }
+            static vector<float> audio_history(FIR_COEFFS.size(), 0.0f);
+            float fir_out = apply_fir_filter(raw_audio, audio_history);
 
             // Deemfaza
             float final_audio = (fir_out * 0.2f) + (previous_audio * 0.8f);
@@ -120,7 +111,7 @@ int main() {
     thread console_thread(input_thread, device);
     console_thread.detach();
 
-    WavWriter wav("pierwsze_nagranie.wav");
+    WavWriter wav("drugie_nagranie.wav");
 
     while (keep_running) {
         rtlsdr_read_sync(device, buffer.data(), buffer.size(), &n_read);
