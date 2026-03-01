@@ -23,7 +23,8 @@ endif()
 find_package(FFTW3 CONFIG REQUIRED)
 add_executable(Smart_Tuner_AI main.cpp
         WavWriter.cpp
-        WavWriter.h)
+        WavWriter.h
+        filter.h)
 target_include_directories(Smart_Tuner_AI PRIVATE
         ${RTLSDR_INCLUDE_DIR}
         ${PORTAUDIO_INCLUDE_DIR}
@@ -40,5 +41,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 add_executable(RadioTests tests/WavWriterTest.cpp WavWriter.cpp
-        tests/WavWriterTest.cpp)
+        tests/WavWriterTest.cpp
+        tests/FilterTest.cpp)
 target_link_libraries(RadioTests PRIVATE gtest_main)
