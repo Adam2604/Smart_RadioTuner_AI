@@ -1,11 +1,13 @@
 import wave
 import os
 
-INPUT_FILE = "pierwsze_nagranie.wav"      
-OUTPUT_FOLDER = "dataset/muzyka"     
+INPUT_FILE = "pop1.wav"      
+OUTPUT_FOLDER = "dataset/muzyka_pop"     
 CHUNK_LENGTH_S = 3
 
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+
+base_name = os.path.splitext(os.path.basename(INPUT_FILE))[0]
 
 with wave.open(INPUT_FILE, 'rb') as infile:
     nchannels = infile.getnchannels()
@@ -20,7 +22,7 @@ with wave.open(INPUT_FILE, 'rb') as infile:
     
     for i in range(total_chunks):
         chunk_data = infile.readframes(frames_per_chunk)
-        filename = os.path.join(OUTPUT_FOLDER, f"chunk_{i:04d}.wav")
+        filename = os.path.join(OUTPUT_FOLDER, f"{base_name}_chunk_{i:04d}.wav")
         
         with wave.open(filename, 'wb') as outfile:
             outfile.setnchannels(nchannels)
