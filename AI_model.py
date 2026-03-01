@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, Dropout, GaussianNoise
 from tensorflow.keras.models import Model
 import librosa
 import os
@@ -56,10 +56,14 @@ print(f"Przygotowano {X.shape[0]} próbek gotowych do treningu")
 wejscie = Input(shape=(128, 128, 1))
 
 # wyciąganie cech z dźwięku
-x = Conv2D(32, (3, 3), activation='relu')(wejscie)
+x = GaussianNoise(0.1)(wejscie)
+
+x = Conv2D(32, (3, 3), activation='relu')(x)
 x = MaxPooling2D((2, 2))(x)
+
 x = Conv2D(64, (3, 3), activation='relu')(x)
 x = MaxPooling2D((2, 2))(x)
+
 x = Flatten()(x)
 x = Dense(128, activation='relu')(x)
 
@@ -90,11 +94,11 @@ historia = model.fit(
     X_train, 
     {'kategoria': y_kat_train, 'podkategoria': y_podkat_train},
     validation_data=(X_test, {'kategoria': y_kat_test, 'podkategoria': y_podkat_test}),
-    epochs=15,        # Ile razy sieć przejrzy cały zbiór danych
-    batch_size=32     # Po ile obrazków analizuje naraz przed aktualizacją wiedzy
+    epochs=20,        # Ile razy sieć przejrzy cały zbiór danych
+    batch_size=32,     # Po ile obrazków analizuje naraz przed aktualizacją wiedzy
 )
 
-model.save("smart_tuner_model_v1.keras")
+model.save("smart_tuner_model_v2.keras")
 print("Trening zakończony! Model zapisano jako 'smart_tuner_model.keras'.")
 
 # Wykres skuteczności dla Kategorii (Mowa vs Muzyka)
@@ -117,5 +121,5 @@ plt.ylabel('Skuteczność')
 plt.legend()
 
 plt.tight_layout()
-plt.savefig("wykres_nauki.png")
+plt.savefig("wykres_nauki2.png")
 print("Wykres wygenerowany i zapisany jako 'wykres_nauki.png'")
