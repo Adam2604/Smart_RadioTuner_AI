@@ -1,7 +1,8 @@
 #include <iostream>
 #include <rtl-sdr.h>
 #include <vector>
-#include <cmath>
+#include <winsock2.h>
+#pragma comment(lib, "ws2_32.lib")
 #include <thread>
 #include <chrono>
 #include <portaudio.h>
@@ -78,6 +79,15 @@ void input_thread(rtlsdr_dev_t *device) {
 }
 
 int main() {
+    // Uruchomienie gniazd UDP w Windowsie
+    WSADATA wsa;
+    WSAStartup(MAKEWORD(2, 2), &wsa);
+    SOCKET udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    sockaddr_in server;
+    server.sin_family = AF_INET;
+    server.sin_port = htons(5005);
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+
     rtlsdr_dev_t *device = nullptr;
     int device_index = 0;
     int status = rtlsdr_open(&device, device_index);
@@ -118,12 +128,19 @@ int main() {
         demodulate_fm(buffer, audio_buffer);
         wav.write(audio_buffer);
         Pa_WriteStream(stream, audio_buffer.data(), audio_buffer.size());
+
+        //Wysylanie dzwieku przez UDP
+        sendto(udp_socket, (const char*) audio_buffer.data(), audio_buffer.size() * sizeof(float), 0, (sockaddr*) &server, sizeof(server));
     }
 
     Pa_StopStream(stream);
     Pa_CloseStream(stream);
     Pa_Terminate();
     rtlsdr_close(device);
+
+    //Zamkniecie UDP
+    closesocket(udp_socket);
+    WSACleanup();
     cout << "Urzadzenie zamkniete" << endl;
     return 0;
 }
