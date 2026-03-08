@@ -22,6 +22,8 @@ POTRZEBNE_PROBKI = SR * 3  # 3 sekundy
 def nasluch_udp():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(("127.0.0.1", 5005))
+    feedback_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    feedback_addr = ("127.0.0.1", 5006)
     print("Nasłuchuję na porcie UDP 5005...")
 
     bufor_audio = []
@@ -52,6 +54,9 @@ def nasluch_udp():
             szansa_kat = np.max(wynik[0][0]) * 100
             indeks_podkat = np.argmax(wynik[1][0])
             szansa_podkat = np.max(wynik[1][0]) * 100
+
+            feedback_msg = f"{indeks_kat},{indeks_podkat}"
+            feedback_socket.sendto(feedback_msg.encode(), feedback_addr)
 
             print(f"[{szansa_kat:5.1f}%] {KATEGORIA_ODWROTNA[indeks_kat]:<10} | "
                   f"[{szansa_podkat:5.1f}%] {PODKATEGORIA_ODWROTNA[indeks_podkat]:<15}")

@@ -23,6 +23,11 @@ double previous_audio = 0.0;
 
 bool keep_running = true;
 
+vector<int> stacje = {91890000, 92290000, 94600000, 96400000, 99390000, 100900000, 101790000, 103700000, 105100000, 106790000};
+int aktualna_stacja_idx = 0;
+int tryb_pracy = 0; // 1: Anty-Reklama, 2: Szukanie Gatunku
+int cel_gatunek = -1;
+
 void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio) {
     output_audio.clear();
 
@@ -123,6 +128,18 @@ int main() {
 
     WavWriter wav("drugie_nagranie.wav");
 
+    SOCKET feedback_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    sockaddr_in local_addr;
+    local_addr.sin_family = AF_INET;
+    local_addr.sin_port = htons(5006);
+    local_addr.sin_addr.s_addr = INADDR_ANY;
+    bind(feedback_socket, (sockaddr*)&local_addr, sizeof(local_addr));
+
+    // Ustawienie trybu nieblokującego
+    u_long mode = 1;
+    ioctlsocket(feedback_socket, FIONBIO, &mode);
+
+    char recv_buf[32];
     while (keep_running) {
         rtlsdr_read_sync(device, buffer.data(), buffer.size(), &n_read);
         demodulate_fm(buffer, audio_buffer);
@@ -131,6 +148,28 @@ int main() {
 
         //Wysylanie dzwieku przez UDP
         sendto(udp_socket, (const char*) audio_buffer.data(), audio_buffer.size() * sizeof(float), 0, (sockaddr*) &server, sizeof(server));
+
+        int bytes = recv(feedback_socket, recv_buf, sizeof(recv_buf), 0);
+        if (bytes > 0) {
+            recv_buf[bytes] = '\0';
+            int kat, podkat;
+            sscanf(recv_buf, "%d,%d", &kat, &podkat);
+
+            if (tryb_pracy == 1 && podkat == 1) {
+                cout << "!!! REKLAMA WYKRYTA !!! Przełączam na następną stację..." << endl;
+                aktualna_stacja_idx = (aktualna_stacja_idx + 1) % stacje.size();
+                rtlsdr_set_center_freq(device, stacje[aktualna_stacja_idx]);
+            }
+
+            if (tryb_pracy == 2 && podkat != cel_gatunek) {
+                cout << "To nie jest szukany gatunek. Szukam dalej..." << endl;
+                aktualna_stacja_idx = (aktualna_stacja_idx + 1) % stacje.size();
+                rtlsdr_set_center_freq(device, stacje[aktualna_stacja_idx]);
+            } else if (tryb_pracy == 2 && podkat == cel_gatunek) {
+                cout << "ZNALAZŁEM! Zostajemy na tej stacji." << endl;
+                tryb_pracy = 0; // Wracamy do trybu normalnego
+            }
+        }
     }
 
     Pa_StopStream(stream);
