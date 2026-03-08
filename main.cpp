@@ -69,17 +69,49 @@ void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio)
 }
 
 void input_thread(rtlsdr_dev_t *device) {
-    double input_mhz;
+    string wejscie_tekst;
+    cout << "\n--- MENU RADIA ---" << endl;
+    cout << "Podaj czestotliwosc (np. 104.4) aby zmienic stacje" << endl;
+    cout << "m1 - Wlacz tryb Anty-Reklama" << endl;
+    cout << "m2 - Wlacz tryb Szukanie Gatunku" << endl;
+    cout << "m0 - Wylacz automatyczne tryby" << endl;
+    cout << "0  - Zakoncz program\n" << endl;
+
     while (true) {
-        cin >> input_mhz;
-        if (input_mhz == 0.0) {
+        cin >> wejscie_tekst;
+
+        if (wejscie_tekst == "0") {
             keep_running = false;
-            cout << "Zamykanie programu i zapisywanie pliku..." << endl;
+            cout << "Zamykanie programu..." << endl;
             break;
         }
-        int new_freq = (int)(input_mhz * 1000000);
-        rtlsdr_set_center_freq(device, new_freq);
-        cout << "Zmieniono stacje na: " << input_mhz << " MHz" << endl;
+        else if (wejscie_tekst == "m1") {
+            tryb_pracy = 1;
+            cout << "TRYB ANTY-REKLAMA WLACZONY" << endl;
+        }
+        else if (wejscie_tekst == "m2") {
+            tryb_pracy = 2;
+            cout << "Podaj numer szukanego gatunku:" << endl;
+            cout << "(0-Audycja, 1-Reklama, 2-Wiadomosci, 3-Lata80-00, 4-Pop, 5-PopRock, 6-Reggae, 7-RockAlternatywny): ";
+            cin >> cel_gatunek;
+            cout << "TRYB SZUKANIA GATUNKU WLACZONY (cel: " << cel_gatunek << ")" << endl;
+        }
+        else if (wejscie_tekst == "m0") {
+            tryb_pracy = 0;
+            cout << "AUTOMATYKA WYLACZONA (Tryb reczny)" << endl;
+        }
+        else {
+            try {
+                // Próba odczytania tego jako częstotliwości
+                double input_mhz = stod(wejscie_tekst);
+                int new_freq = (int)(input_mhz * 1000000);
+                rtlsdr_set_center_freq(device, new_freq);
+                cout << "Zmieniono stacje na: " << input_mhz << " MHz" << endl;
+                tryb_pracy = 0;
+            } catch (...) {
+                cout << "Nieznana komenda" << endl;
+            }
+        }
     }
 }
 
@@ -179,6 +211,7 @@ int main() {
 
     //Zamkniecie UDP
     closesocket(udp_socket);
+    closesocket(feedback_socket);
     WSACleanup();
     cout << "Urzadzenie zamkniete" << endl;
     return 0;
