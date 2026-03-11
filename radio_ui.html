@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Tuner AI - Radio Sterowane AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .radio-display {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .frequency-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 0.9em;
+            margin: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .ai-detection {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: white;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .controls {
+            margin-bottom: 25px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+
+        .btn-full {
+            grid-column: 1 / -1;
+        }
+
+        .genre-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .genre-btn {
+            padding: 10px;
+            font-size: 0.9em;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .genre-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .preset-stations {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 10px 5px;
+            font-size: 0.85em;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .connection-status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+
+        .connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Smart Tuner AI</h1>
+        <p class="subtitle">Radio sterowane sztuczną inteligencją</p>
+
+        <div class="radio-display">
+            <div class="frequency-display" id="frequencyDisplay">94.6 MHz</div>
+            <div>
+                <span class="status-badge" id="modeDisplay">Tryb Ręczny</span>
+                <span class="status-badge" id="stationDisplay">Stacja #3</span>
+            </div>
+        </div>
+
+        <div class="ai-detection" id="aiDetection">
+            <span>🤖 AI: Oczekiwanie na detekcję...</span>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Stacje programowane</label>
+                <div class="preset-stations">
+                    <button class="preset-btn" onclick="setFrequency(91.89)">91.89</button>
+                    <button class="preset-btn" onclick="setFrequency(92.29)">92.29</button>
+                    <button class="preset-btn" onclick="setFrequency(94.60)">94.60</button>
+                    <button class="preset-btn" onclick="setFrequency(96.40)">96.40</button>
+                    <button class="preset-btn" onclick="setFrequency(99.39)">99.39</button>
+                    <button class="preset-btn" onclick="setFrequency(100.90)">100.90</button>
+                    <button class="preset-btn" onclick="setFrequency(101.79)">101.79</button>
+                    <button class="preset-btn" onclick="setFrequency(103.70)">103.70</button>
+                    <button class="preset-btn" onclick="setFrequency(105.10)">105.10</button>
+                    <button class="preset-btn" onclick="setFrequency(106.79)">106.79</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="freqInput">Częstotliwość (MHz)</label>
+                <input type="number" id="freqInput" step="0.01" min="88" max="108" value="94.6">
+            </div>
+
+            <button class="btn-primary btn-full" onclick="setCustomFrequency()">
+                📻 Ustaw częstotliwość
+            </button>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-success" onclick="setMode(0)">
+                ✋ Tryb Ręczny
+            </button>
+            <button class="btn-warning" onclick="setMode(1)">
+                🚫 Anty-Reklama
+            </button>
+        </div>
+
+        <div class="control-group">
+            <button class="btn-danger btn-full" onclick="toggleGenreMode()">
+                🎸 Szukaj Gatunku
+            </button>
+            <div class="genre-selector" id="genreSelector" style="display: none;">
+                <button class="genre-btn" onclick="selectGenre(0)">Audycja</button>
+                <button class="genre-btn" onclick="selectGenre(1)">Reklama</button>
+                <button class="genre-btn" onclick="selectGenre(2)">Wiadomości</button>
+                <button class="genre-btn" onclick="selectGenre(3)">Lata 80-00</button>
+                <button class="genre-btn" onclick="selectGenre(4)">Pop</button>
+                <button class="genre-btn" onclick="selectGenre(5)">Pop Rock</button>
+                <button class="genre-btn" onclick="selectGenre(6)">Reggae</button>
+                <button class="genre-btn" onclick="selectGenre(7)">Rock Alt.</button>
+            </div>
+        </div>
+
+        <div class="connection-status disconnected" id="connectionStatus">
+            ⚠️ Łączenie z radiem...
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let selectedGenre = -1;
+        let genreModeVisible = false;
+
+        const genreNames = [
+            'Audycja', 'Reklama', 'Wiadomości', 'Lata 80-00',
+            'Pop', 'Pop Rock', 'Reggae', 'Rock Alternatywny'
+        ];
+
+        async function updateStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+
+                // Aktualizacja wyświetlanej częstotliwości
+                const freqMHz = (data.frequency / 1000000).toFixed(2);
+                document.getElementById('frequencyDisplay').textContent = `${freqMHz} MHz`;
+                document.getElementById('freqInput').value = freqMHz;
+
+                // Aktualizacja trybu pracy
+                const modeDisplay = document.getElementById('modeDisplay');
+                if (data.mode === 0) {
+                    modeDisplay.textContent = '✋ Tryb Ręczny';
+                    modeDisplay.style.background = 'rgba(76, 175, 80, 0.3)';
+                } else if (data.mode === 1) {
+                    modeDisplay.textContent = '🚫 Anty-Reklama';
+                    modeDisplay.style.background = 'rgba(255, 152, 0, 0.3)';
+                } else if (data.mode === 2) {
+                    modeDisplay.textContent = `🎸 Szukam: ${genreNames[data.target_genre]}`;
+                    modeDisplay.style.background = 'rgba(233, 30, 99, 0.3)';
+                }
+
+                // Aktualizacja numeru stacji
+                document.getElementById('stationDisplay').textContent = `Stacja #${data.station_idx + 1}`;
+
+                // Aktualizacja detekcji AI
+                const aiDetection = document.getElementById('aiDetection');
+                if (data.last_cat >= 0 && data.last_subcat >= 0) {
+                    let categoryText = data.last_cat === 0 ? '🎤 Muzyka' : '📻 Inne';
+                    let subcategoryText = genreNames[data.last_subcat] || 'Nieznany';
+                    aiDetection.innerHTML = `🤖 AI wykryło: ${categoryText} - ${subcategoryText}`;
+                    aiDetection.classList.remove('pulse');
+                } else {
+                    aiDetection.innerHTML = '🤖 AI: Oczekiwanie na detekcję...';
+                    aiDetection.classList.add('pulse');
+                }
+
+                // Status połączenia
+                document.getElementById('connectionStatus').className = 'connection-status connected';
+                document.getElementById('connectionStatus').innerHTML = '✅ Połączono z radiem';
+
+            } catch (error) {
+                document.getElementById('connectionStatus').className = 'connection-status disconnected';
+                document.getElementById('connectionStatus').innerHTML = '⚠️ Brak połączenia z radiem';
+            }
+        }
+
+        async function setFrequency(freqMHz) {
+            const freqHz = Math.round(freqMHz * 1000000);
+            try {
+                await fetch(`${API_BASE}/frequency`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ freq: freqHz })
+                });
+                await updateStatus();
+            } catch (error) {
+                console.error('Błąd ustawiania częstotliwości:', error);
+            }
+        }
+
+        function setCustomFrequency() {
+            const freqInput = document.getElementById('freqInput');
+            const freqMHz = parseFloat(freqInput.value);
+            if (freqMHz >= 88 && freqMHz <= 108) {
+                setFrequency(freqMHz);
+            } else {
+                alert('Częstotliwość musi być między 88 a 108 MHz');
+            }
+        }
+
+        async function setMode(mode) {
+            try {
+                await fetch(`${API_BASE}/mode`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: mode, genre: -1 })
+                });
+                await updateStatus();
+            } catch (error) {
+                console.error('Błąd ustawiania trybu:', error);
+            }
+        }
+
+        function toggleGenreMode() {
+            genreModeVisible = !genreModeVisible;
+            const selector = document.getElementById('genreSelector');
+            selector.style.display = genreModeVisible ? 'grid' : 'none';
+        }
+
+        async function selectGenre(genre) {
+            selectedGenre = genre;
+
+            // Podświetlenie wybranego gatunku
+            document.querySelectorAll('.genre-btn').forEach((btn, idx) => {
+                if (idx === genre) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            try {
+                await fetch(`${API_BASE}/mode`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode: 2, genre: genre })
+                });
+                await updateStatus();
+            } catch (error) {
+                console.error('Błąd ustawiania gatunku:', error);
+            }
+        }
+
+        // Aktualizacja co sekundę
+        setInterval(updateStatus, 1000);
+        updateStatus();
+
+        // Obsługa Enter w polu częstotliwości
+        document.getElementById('freqInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                setCustomFrequency();
+            }
+        });
+    </script>
+</body>
+</html>
