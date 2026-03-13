@@ -1,314 +1,611 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Tuner AI - Radio Sterowane AI</title>
+    <meta name="description" content="Smart Tuner AI – inteligentne radio sterowane sztuczną inteligencją z automatycznym rozpoznawaniem gatunków muzycznych.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        * {
+        /* ── CSS Custom Properties ─────────────────────────────── */
+        :root {
+            --transition-speed: 0.35s;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --bg-card: rgba(26, 26, 46, 0.85);
+            --bg-card-solid: #1a1a2e;
+            --bg-input: rgba(255,255,255,0.06);
+            --bg-input-focus: rgba(255,255,255,0.1);
+            --border-color: rgba(255,255,255,0.08);
+            --border-focus: #7c6aef;
+            --text-primary: #f0eef6;
+            --text-secondary: #9b97b0;
+            --text-muted: #6b6880;
+            --accent: #7c6aef;
+            --accent-hover: #9584ff;
+            --accent-glow: rgba(124,106,239,0.35);
+            --success: #34d399;
+            --success-bg: rgba(52,211,153,0.12);
+            --warning: #fbbf24;
+            --warning-bg: rgba(251,191,36,0.12);
+            --danger: #f87171;
+            --danger-bg: rgba(248,113,113,0.12);
+            --display-bg: linear-gradient(160deg, #16162a 0%, #1e1b4b 100%);
+            --display-border: rgba(124,106,239,0.2);
+            --freq-color: #a5f3fc;
+            --freq-glow: rgba(165,243,252,0.4);
+            --badge-bg: rgba(255,255,255,0.08);
+            --ai-bg: linear-gradient(135deg, rgba(124,106,239,0.18) 0%, rgba(236,72,153,0.18) 100%);
+            --ai-border: rgba(124,106,239,0.25);
+            --preset-bg: rgba(255,255,255,0.05);
+            --preset-hover: rgba(124,106,239,0.18);
+            --preset-active-bg: var(--accent);
+            --genre-bg: rgba(255,255,255,0.05);
+            --genre-active: linear-gradient(135deg, #7c6aef, #a855f7);
+            --shadow-card: 0 8px 32px rgba(0,0,0,0.45);
+            --shadow-btn: 0 4px 14px rgba(0,0,0,0.3);
+            --connected-bg: rgba(52,211,153,0.1);
+            --connected-border: rgba(52,211,153,0.25);
+            --connected-text: #6ee7b7;
+            --disconnected-bg: rgba(248,113,113,0.1);
+            --disconnected-border: rgba(248,113,113,0.25);
+            --disconnected-text: #fca5a5;
+            --toggle-bg: rgba(255,255,255,0.08);
+            --toggle-hover: rgba(255,255,255,0.15);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0eef6;
+            --bg-secondary: #e8e5f0;
+            --bg-card: rgba(255,255,255,0.88);
+            --bg-card-solid: #ffffff;
+            --bg-input: rgba(0,0,0,0.04);
+            --bg-input-focus: rgba(0,0,0,0.07);
+            --border-color: rgba(0,0,0,0.08);
+            --border-focus: #7c6aef;
+            --text-primary: #1e1b3a;
+            --text-secondary: #5b577a;
+            --text-muted: #8e8aa8;
+            --accent: #6d5cdb;
+            --accent-hover: #7c6aef;
+            --accent-glow: rgba(109,92,219,0.25);
+            --success: #10b981;
+            --success-bg: rgba(16,185,129,0.1);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245,158,11,0.1);
+            --danger: #ef4444;
+            --danger-bg: rgba(239,68,68,0.1);
+            --display-bg: linear-gradient(160deg, #1e1b4b 0%, #312e81 100%);
+            --display-border: rgba(124,106,239,0.3);
+            --freq-color: #a5f3fc;
+            --freq-glow: rgba(165,243,252,0.5);
+            --badge-bg: rgba(255,255,255,0.2);
+            --ai-bg: linear-gradient(135deg, rgba(109,92,219,0.12) 0%, rgba(236,72,153,0.12) 100%);
+            --ai-border: rgba(109,92,219,0.2);
+            --preset-bg: rgba(0,0,0,0.04);
+            --preset-hover: rgba(109,92,219,0.12);
+            --preset-active-bg: var(--accent);
+            --genre-bg: rgba(0,0,0,0.04);
+            --genre-active: linear-gradient(135deg, #6d5cdb, #a855f7);
+            --shadow-card: 0 8px 32px rgba(0,0,0,0.1);
+            --shadow-btn: 0 4px 14px rgba(0,0,0,0.08);
+            --connected-bg: rgba(16,185,129,0.08);
+            --connected-border: rgba(16,185,129,0.2);
+            --connected-text: #059669;
+            --disconnected-bg: rgba(239,68,68,0.08);
+            --disconnected-border: rgba(239,68,68,0.2);
+            --disconnected-text: #dc2626;
+            --toggle-bg: rgba(0,0,0,0.06);
+            --toggle-hover: rgba(0,0,0,0.1);
+        }
+
+        /* ── Reset & Base ──────────────────────────────────────── */
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 20px;
+            align-items: flex-start;
+            padding: 32px 16px 64px;
+            transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* subtle animated mesh gradient behind the card */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse at 20% 0%, var(--accent-glow) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(168,85,247,0.15) 0%, transparent 50%);
+            pointer-events: none;
+            transition: opacity var(--transition-speed);
+        }
+
+        /* ── Container ─────────────────────────────────────────── */
         .container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 600px;
+            position: relative;
+            z-index: 1;
+            background: var(--bg-card);
+            backdrop-filter: blur(24px) saturate(1.4);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: var(--shadow-card);
+            padding: 36px 32px 32px;
+            max-width: 540px;
             width: 100%;
-            backdrop-filter: blur(10px);
+            transition: background var(--transition-speed), border-color var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        /* ── Header ────────────────────────────────────────────── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
         }
 
         h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2.5em;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-size: 1.65em;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 0.9em;
-        }
-
-        .radio-display {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            margin-bottom: 30px;
-            box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .frequency-display {
-            font-size: 3em;
-            font-weight: bold;
-            color: #00ff88;
-            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
-            margin-bottom: 10px;
-            font-family: 'Courier New', monospace;
-        }
-
-        .status-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 20px;
-            border-radius: 20px;
-            color: #fff;
-            font-size: 0.9em;
-            margin: 5px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .ai-detection {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            color: white;
-            text-align: center;
-            min-height: 60px;
+        /* Theme Toggle Button */
+        .theme-toggle {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-        }
-
-        .controls {
-            margin-bottom: 25px;
-        }
-
-        .control-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 0.95em;
-        }
-
-        input[type="number"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1.1em;
-            transition: border-color 0.3s;
-        }
-
-        input[type="number"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        button {
-            padding: 15px 25px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1em;
-            font-weight: 600;
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background: var(--toggle-bg);
             cursor: pointer;
-            transition: all 0.3s;
-            color: white;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: background 0.2s, border-color 0.2s, transform 0.2s;
+            font-size: 1.25em;
+            flex-shrink: 0;
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        .theme-toggle:hover {
+            background: var(--toggle-hover);
+            transform: scale(1.08);
         }
 
-        button:active {
-            transform: translateY(0);
+        .theme-toggle:active {
+            transform: scale(0.96);
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .theme-toggle .icon-sun,
+        .theme-toggle .icon-moon {
+            transition: opacity 0.3s, transform 0.3s;
+            position: absolute;
         }
 
-        .btn-success {
-            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+        [data-theme="dark"] .theme-toggle .icon-sun { opacity: 1; transform: rotate(0); }
+        [data-theme="dark"] .theme-toggle .icon-moon { opacity: 0; transform: rotate(90deg); }
+        [data-theme="light"] .theme-toggle .icon-sun { opacity: 0; transform: rotate(-90deg); }
+        [data-theme="light"] .theme-toggle .icon-moon { opacity: 1; transform: rotate(0); }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            margin-bottom: 28px;
+            font-weight: 500;
         }
 
-        .btn-warning {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        /* ── Radio Display ─────────────────────────────────────── */
+        .radio-display {
+            background: var(--display-bg);
+            border: 1px solid var(--display-border);
+            border-radius: 18px;
+            padding: 28px 20px 22px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .btn-danger {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        /* scanline decorative overlay */
+        .radio-display::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 3px,
+                rgba(255,255,255,0.015) 3px,
+                rgba(255,255,255,0.015) 4px
+            );
+            pointer-events: none;
+            border-radius: 18px;
         }
 
-        .btn-full {
-            grid-column: 1 / -1;
+        .frequency-display {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 3.2em;
+            font-weight: 700;
+            color: var(--freq-color);
+            text-shadow: 0 0 28px var(--freq-glow), 0 0 6px var(--freq-glow);
+            margin-bottom: 14px;
+            letter-spacing: 0.02em;
+            transition: text-shadow 0.4s;
         }
 
-        .genre-selector {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+        .badges {
+            display: flex;
             gap: 8px;
-            margin-top: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
-        .genre-btn {
-            padding: 10px;
-            font-size: 0.9em;
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            color: #333;
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--badge-bg);
+            backdrop-filter: blur(6px);
+            padding: 6px 14px;
+            border-radius: 10px;
+            color: #e0def4;
+            font-size: 0.82em;
+            font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: background 0.3s;
         }
 
-        .genre-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        /* ── AI Detection ──────────────────────────────────────── */
+        .ai-detection {
+            background: var(--ai-bg);
+            border: 1px solid var(--ai-border);
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 22px;
+            text-align: center;
+            min-height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.92em;
+            color: var(--text-primary);
+            transition: background var(--transition-speed), border-color var(--transition-speed);
         }
 
+        /* ── Section Labels ────────────────────────────────────── */
+        .section-label {
+            display: block;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.78em;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 10px;
+        }
+
+        /* ── Preset Stations ───────────────────────────────────── */
         .preset-stations {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 6px;
+            margin-bottom: 22px;
         }
 
         .preset-btn {
-            padding: 10px 5px;
-            font-size: 0.85em;
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            color: #333;
+            padding: 10px 4px;
+            font-size: 0.82em;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--preset-bg);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
+        .preset-btn:hover {
+            background: var(--preset-hover);
+            color: var(--text-primary);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .preset-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ── Frequency Input ───────────────────────────────────── */
+        .freq-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 22px;
+        }
+
+        .freq-input-group input {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1em;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            transition: border-color 0.2s, background 0.2s;
+            outline: none;
+        }
+
+        .freq-input-group input:focus {
+            border-color: var(--border-focus);
+            background: var(--bg-input-focus);
+        }
+
+        .freq-input-group button {
+            flex-shrink: 0;
+        }
+
+        /* ── Buttons ───────────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.22s;
+            color: #fff;
+            box-shadow: var(--shadow-btn);
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.12);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            filter: brightness(0.95);
+        }
+
+        .btn-accent {
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: #1a1a2e;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ec4899, #f472b6);
+        }
+
+        /* ── Mode Buttons ──────────────────────────────────────── */
+        .mode-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .btn-genre-toggle {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        /* ── Genre Selector ────────────────────────────────────── */
+        .genre-selector {
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-bottom: 22px;
+            animation: slideDown 0.3s ease;
+        }
+
+        .genre-selector.visible {
+            display: grid;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .genre-btn {
+            padding: 10px 12px;
+            font-size: 0.84em;
+            font-weight: 600;
+            background: var(--genre-bg);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .genre-btn:hover {
+            background: var(--preset-hover);
+            color: var(--text-primary);
+            border-color: var(--accent);
+        }
+
+        .genre-btn.active {
+            background: var(--genre-active);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
+
+        /* ── Connection Status ─────────────────────────────────── */
         .connection-status {
             text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.9em;
-            margin-top: 20px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.82em;
+            font-weight: 600;
+            margin-top: 8px;
+            border: 1px solid transparent;
+            transition: all var(--transition-speed);
         }
 
         .connected {
-            background: #d4edda;
-            color: #155724;
+            background: var(--connected-bg);
+            border-color: var(--connected-border);
+            color: var(--connected-text);
         }
 
         .disconnected {
-            background: #f8d7da;
-            color: #721c24;
+            background: var(--disconnected-bg);
+            border-color: var(--disconnected-border);
+            color: var(--disconnected-text);
         }
 
+        /* ── Pulse Animation ───────────────────────────────────── */
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50%      { opacity: 0.45; }
         }
-
         .pulse {
             animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* ── Responsive ────────────────────────────────────────── */
+        @media (max-width: 480px) {
+            .container { padding: 24px 16px 22px; border-radius: 18px; }
+            h1 { font-size: 1.35em; }
+            .frequency-display { font-size: 2.4em; }
+            .preset-stations { grid-template-columns: repeat(3, 1fr); }
+            .mode-group { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎵 Smart Tuner AI</h1>
+        <!-- Header with theme toggle -->
+        <div class="header">
+            <h1 id="main-heading">🎵 Smart Tuner AI</h1>
+            <button class="theme-toggle" id="themeToggle" aria-label="Przełącz tryb jasny / ciemny" title="Przełącz tryb jasny / ciemny">
+                <span class="icon-sun">☀️</span>
+                <span class="icon-moon">🌙</span>
+            </button>
+        </div>
         <p class="subtitle">Radio sterowane sztuczną inteligencją</p>
 
+        <!-- Radio Display -->
         <div class="radio-display">
             <div class="frequency-display" id="frequencyDisplay">94.6 MHz</div>
-            <div>
-                <span class="status-badge" id="modeDisplay">Tryb Ręczny</span>
+            <div class="badges">
+                <span class="status-badge" id="modeDisplay">✋ Tryb Ręczny</span>
                 <span class="status-badge" id="stationDisplay">Stacja #3</span>
             </div>
         </div>
 
+        <!-- AI Detection -->
         <div class="ai-detection" id="aiDetection">
             <span>🤖 AI: Oczekiwanie na detekcję...</span>
         </div>
 
-        <div class="controls">
-            <div class="control-group">
-                <label>Stacje programowane</label>
-                <div class="preset-stations">
-                    <button class="preset-btn" onclick="setFrequency(91.89)">91.89</button>
-                    <button class="preset-btn" onclick="setFrequency(92.29)">92.29</button>
-                    <button class="preset-btn" onclick="setFrequency(94.60)">94.60</button>
-                    <button class="preset-btn" onclick="setFrequency(96.40)">96.40</button>
-                    <button class="preset-btn" onclick="setFrequency(99.39)">99.39</button>
-                    <button class="preset-btn" onclick="setFrequency(100.90)">100.90</button>
-                    <button class="preset-btn" onclick="setFrequency(101.79)">101.79</button>
-                    <button class="preset-btn" onclick="setFrequency(103.70)">103.70</button>
-                    <button class="preset-btn" onclick="setFrequency(105.10)">105.10</button>
-                    <button class="preset-btn" onclick="setFrequency(106.79)">106.79</button>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <label for="freqInput">Częstotliwość (MHz)</label>
-                <input type="number" id="freqInput" step="0.01" min="88" max="108" value="94.6">
-            </div>
-
-            <button class="btn-primary btn-full" onclick="setCustomFrequency()">
-                📻 Ustaw częstotliwość
-            </button>
+        <!-- Preset Stations -->
+        <span class="section-label">Stacje programowane</span>
+        <div class="preset-stations">
+            <button class="preset-btn" onclick="setFrequency(91.89)">91.89</button>
+            <button class="preset-btn" onclick="setFrequency(92.29)">92.29</button>
+            <button class="preset-btn" onclick="setFrequency(94.60)">94.60</button>
+            <button class="preset-btn" onclick="setFrequency(96.40)">96.40</button>
+            <button class="preset-btn" onclick="setFrequency(99.39)">99.39</button>
+            <button class="preset-btn" onclick="setFrequency(100.90)">100.90</button>
+            <button class="preset-btn" onclick="setFrequency(101.79)">101.79</button>
+            <button class="preset-btn" onclick="setFrequency(103.70)">103.70</button>
+            <button class="preset-btn" onclick="setFrequency(105.10)">105.10</button>
+            <button class="preset-btn" onclick="setFrequency(106.79)">106.79</button>
         </div>
 
-        <div class="button-group">
-            <button class="btn-success" onclick="setMode(0)">
-                ✋ Tryb Ręczny
-            </button>
-            <button class="btn-warning" onclick="setMode(1)">
-                🚫 Anty-Reklama
-            </button>
+        <!-- Frequency Input -->
+        <span class="section-label">Częstotliwość (MHz)</span>
+        <div class="freq-input-group">
+            <input type="number" id="freqInput" step="0.01" min="88" max="108" value="94.6" placeholder="np. 94.60">
+            <button class="btn btn-accent" onclick="setCustomFrequency()">📻 Ustaw</button>
         </div>
 
-        <div class="control-group">
-            <button class="btn-danger btn-full" onclick="toggleGenreMode()">
-                🎸 Szukaj Gatunku
-            </button>
-            <div class="genre-selector" id="genreSelector" style="display: none;">
-                <button class="genre-btn" onclick="selectGenre(0)">Audycja</button>
-                <button class="genre-btn" onclick="selectGenre(1)">Reklama</button>
-                <button class="genre-btn" onclick="selectGenre(2)">Wiadomości</button>
-                <button class="genre-btn" onclick="selectGenre(3)">Lata 80-00</button>
-                <button class="genre-btn" onclick="selectGenre(4)">Pop</button>
-                <button class="genre-btn" onclick="selectGenre(5)">Pop Rock</button>
-                <button class="genre-btn" onclick="selectGenre(6)">Reggae</button>
-                <button class="genre-btn" onclick="selectGenre(7)">Rock Alt.</button>
-            </div>
+        <!-- Mode Buttons -->
+        <span class="section-label">Tryb pracy</span>
+        <div class="mode-group">
+            <button class="btn btn-success" id="btnManual" onclick="setMode(0)">✋ Tryb Ręczny</button>
+            <button class="btn btn-warning" id="btnAntiAd" onclick="setMode(1)">🚫 Anty-Reklama</button>
         </div>
 
+        <button class="btn btn-danger btn-genre-toggle" id="btnGenreToggle" onclick="toggleGenreMode()">🎸 Szukaj Gatunku</button>
+
+        <div class="genre-selector" id="genreSelector">
+            <button class="genre-btn" onclick="selectGenre(0)">Audycja</button>
+            <button class="genre-btn" onclick="selectGenre(1)">Reklama</button>
+            <button class="genre-btn" onclick="selectGenre(2)">Wiadomości</button>
+            <button class="genre-btn" onclick="selectGenre(3)">Lata 80-00</button>
+            <button class="genre-btn" onclick="selectGenre(4)">Pop</button>
+            <button class="genre-btn" onclick="selectGenre(5)">Pop Rock</button>
+            <button class="genre-btn" onclick="selectGenre(6)">Reggae</button>
+            <button class="genre-btn" onclick="selectGenre(7)">Rock Alt.</button>
+        </div>
+
+        <!-- Connection Status -->
         <div class="connection-status disconnected" id="connectionStatus">
             ⚠️ Łączenie z radiem...
         </div>
     </div>
 
     <script>
+        /* ── Theme Toggle ──────────────────────────────────────── */
+        (function initTheme() {
+            const saved = localStorage.getItem('smarttuner-theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+            }
+        })();
+
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('smarttuner-theme', next);
+        });
+
+        /* ── Application Logic ─────────────────────────────────── */
         const API_BASE = 'http://localhost:8080/api';
         let selectedGenre = -1;
-        let genreModeVisible = false;
 
         const genreNames = [
             'Audycja', 'Reklama', 'Wiadomości', 'Lata 80-00',
@@ -320,46 +617,48 @@
                 const response = await fetch(`${API_BASE}/status`);
                 const data = await response.json();
 
-                // Aktualizacja wyświetlanej częstotliwości
+                // Frequency
                 const freqMHz = (data.frequency / 1000000).toFixed(2);
                 document.getElementById('frequencyDisplay').textContent = `${freqMHz} MHz`;
                 document.getElementById('freqInput').value = freqMHz;
 
-                // Aktualizacja trybu pracy
+                // Mode
                 const modeDisplay = document.getElementById('modeDisplay');
                 if (data.mode === 0) {
                     modeDisplay.textContent = '✋ Tryb Ręczny';
-                    modeDisplay.style.background = 'rgba(76, 175, 80, 0.3)';
+                    modeDisplay.style.background = 'rgba(52,211,153,0.25)';
                 } else if (data.mode === 1) {
                     modeDisplay.textContent = '🚫 Anty-Reklama';
-                    modeDisplay.style.background = 'rgba(255, 152, 0, 0.3)';
+                    modeDisplay.style.background = 'rgba(251,191,36,0.25)';
                 } else if (data.mode === 2) {
                     modeDisplay.textContent = `🎸 Szukam: ${genreNames[data.target_genre]}`;
-                    modeDisplay.style.background = 'rgba(233, 30, 99, 0.3)';
+                    modeDisplay.style.background = 'rgba(236,72,153,0.25)';
                 }
 
-                // Aktualizacja numeru stacji
+                // Station
                 document.getElementById('stationDisplay').textContent = `Stacja #${data.station_idx + 1}`;
 
-                // Aktualizacja detekcji AI
+                // AI Detection
                 const aiDetection = document.getElementById('aiDetection');
                 if (data.last_cat >= 0 && data.last_subcat >= 0) {
-                    let categoryText = data.last_cat === 0 ? '🎤 Muzyka' : '📻 Inne';
-                    let subcategoryText = genreNames[data.last_subcat] || 'Nieznany';
-                    aiDetection.innerHTML = `🤖 AI wykryło: ${categoryText} - ${subcategoryText}`;
+                    const categoryText = data.last_cat === 0 ? '🎤 Muzyka' : '📻 Inne';
+                    const subcategoryText = genreNames[data.last_subcat] || 'Nieznany';
+                    aiDetection.innerHTML = `🤖 AI wykryło: ${categoryText} – ${subcategoryText}`;
                     aiDetection.classList.remove('pulse');
                 } else {
                     aiDetection.innerHTML = '🤖 AI: Oczekiwanie na detekcję...';
                     aiDetection.classList.add('pulse');
                 }
 
-                // Status połączenia
-                document.getElementById('connectionStatus').className = 'connection-status connected';
-                document.getElementById('connectionStatus').innerHTML = '✅ Połączono z radiem';
+                // Connection OK
+                const cs = document.getElementById('connectionStatus');
+                cs.className = 'connection-status connected';
+                cs.innerHTML = '✅ Połączono z radiem';
 
             } catch (error) {
-                document.getElementById('connectionStatus').className = 'connection-status disconnected';
-                document.getElementById('connectionStatus').innerHTML = '⚠️ Brak połączenia z radiem';
+                const cs = document.getElementById('connectionStatus');
+                cs.className = 'connection-status disconnected';
+                cs.innerHTML = '⚠️ Brak połączenia z radiem';
             }
         }
 
@@ -378,8 +677,7 @@
         }
 
         function setCustomFrequency() {
-            const freqInput = document.getElementById('freqInput');
-            const freqMHz = parseFloat(freqInput.value);
+            const freqMHz = parseFloat(document.getElementById('freqInput').value);
             if (freqMHz >= 88 && freqMHz <= 108) {
                 setFrequency(freqMHz);
             } else {
@@ -401,21 +699,15 @@
         }
 
         function toggleGenreMode() {
-            genreModeVisible = !genreModeVisible;
             const selector = document.getElementById('genreSelector');
-            selector.style.display = genreModeVisible ? 'grid' : 'none';
+            selector.classList.toggle('visible');
         }
 
         async function selectGenre(genre) {
             selectedGenre = genre;
 
-            // Podświetlenie wybranego gatunku
             document.querySelectorAll('.genre-btn').forEach((btn, idx) => {
-                if (idx === genre) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+                btn.classList.toggle('active', idx === genre);
             });
 
             try {
@@ -430,15 +722,13 @@
             }
         }
 
-        // Aktualizacja co sekundę
+        // Poll every second
         setInterval(updateStatus, 1000);
         updateStatus();
 
-        // Obsługa Enter w polu częstotliwości
+        // Enter key in frequency input
         document.getElementById('freqInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                setCustomFrequency();
-            }
+            if (e.key === 'Enter') setCustomFrequency();
         });
     </script>
 </body>
