@@ -1,8 +1,8 @@
 import socket
 import numpy as np
-import librosa
 import tensorflow as tf
 import os
+import librosa
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 

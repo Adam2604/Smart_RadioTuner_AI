@@ -667,7 +667,7 @@
             try {
                 await fetch(`${API_BASE}/frequency`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({ freq: freqHz })
                 });
                 await updateStatus();
@@ -689,7 +689,7 @@
             try {
                 await fetch(`${API_BASE}/mode`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({ mode: mode, genre: -1 })
                 });
                 await updateStatus();
@@ -713,7 +713,7 @@
             try {
                 await fetch(`${API_BASE}/mode`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({ mode: 2, genre: genre })
                 });
                 await updateStatus();

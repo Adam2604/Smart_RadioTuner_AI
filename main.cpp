@@ -2,12 +2,15 @@
 #include <rtl-sdr.h>
 #include <vector>
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 #include <thread>
 #include <chrono>
 #include <portaudio.h>
 #include "WavWriter.h"
 #include "filter.h"
+#include <sstream>
+#include <mutex>
 
 using namespace std;
 
@@ -27,6 +30,8 @@ vector<int> stacje = {91890000, 92290000, 94600000, 96400000, 99390000, 10090000
 int aktualna_stacja_idx = 0;
 int tryb_pracy = 0; // 1: Anty-Reklama, 2: Szukanie Gatunku
 int cel_gatunek = -1;
+int ostatni_kat = -1, ostatni_podkat = -1;
+mutex state_mutex;
 
 void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio) {
     output_audio.clear();
@@ -68,6 +73,100 @@ void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio)
     }
 }
 
+void http_server_thread() {
+    SOCKET server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(8080);
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+
+    int opt = 1;
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt));
+
+    if (bind(server_socket, (sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        cout << "Blad bindowania serwera HTTP" << endl;
+        return;
+    }
+
+    listen(server_socket, 5);
+    cout << "Serwer HTTP uruchomiony na porcie 8080" << endl;
+
+    while (keep_running) {
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(server_socket, &readfds);
+
+        timeval timeout = {1, 0};
+        int activity = select(0, &readfds, NULL, NULL, &timeout);
+
+        if (activity <= 0) continue;
+
+        SOCKET client = accept(server_socket, NULL, NULL);
+        if (client == INVALID_SOCKET) continue;
+
+        char buffer[4096] = {0};
+        int bytes = recv(client, buffer, sizeof(buffer), 0);
+
+        if (bytes > 0) {
+            string request(buffer);
+            string response;
+            string headers = "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: application/json\r\n\r\n";
+
+            if (request.find("GET /api/status") != string::npos) {
+                lock_guard<mutex> lock(state_mutex);
+                stringstream json;
+                json << "{\"frequency\":" << frequency
+                     << ",\"mode\":" << tryb_pracy
+                     << ",\"target_genre\":" << cel_gatunek
+                     << ",\"last_cat\":" << ostatni_kat
+                     << ",\"last_subcat\":" << ostatni_podkat
+                     << ",\"station_idx\":" << aktualna_stacja_idx << "}";
+                response = headers + json.str();
+            }
+            else if (request.find("POST /api/frequency") != string::npos) {
+                size_t body_pos = request.find("\r\n\r\n");
+                if (body_pos != string::npos) {
+                    string body = request.substr(body_pos + 4);
+                    size_t freq_pos = body.find("\"freq\":");
+                    if (freq_pos != string::npos) {
+                        int new_freq = stoi(body.substr(freq_pos + 7));
+                        lock_guard<mutex> lock(state_mutex);
+                        frequency = new_freq;
+                        response = headers + "{\"status\":\"ok\"}";
+                    }
+                }
+            }
+            else if (request.find("POST /api/mode") != string::npos) {
+                size_t body_pos = request.find("\r\n\r\n");
+                if (body_pos != string::npos) {
+                    string body = request.substr(body_pos + 4);
+                    size_t mode_pos = body.find("\"mode\":");
+                    if (mode_pos != string::npos) {
+                        int new_mode = stoi(body.substr(mode_pos + 7));
+                        lock_guard<mutex> lock(state_mutex);
+                        tryb_pracy = new_mode;
+
+                        size_t genre_pos = body.find("\"genre\":");
+                        if (genre_pos != string::npos) {
+                            cel_gatunek = stoi(body.substr(genre_pos + 8));
+                        }
+                        response = headers + "{\"status\":\"ok\"}";
+                    }
+                }
+            }
+            else {
+                response = headers + "{\"error\":\"unknown endpoint\"}";
+            }
+
+            send(client, response.c_str(), response.length(), 0);
+        }
+
+        closesocket(client);
+    }
+
+    closesocket(server_socket);
+}
+
 void input_thread(rtlsdr_dev_t *device) {
     string wejscie_tekst;
     cout << "\n--- MENU RADIA ---" << endl;
@@ -86,6 +185,7 @@ void input_thread(rtlsdr_dev_t *device) {
             break;
         }
         else if (wejscie_tekst == "m1") {
+            lock_guard<mutex> lock(state_mutex);
             tryb_pracy = 1;
             cout << "TRYB ANTY-REKLAMA WLACZONY" << endl;
         }
@@ -97,6 +197,7 @@ void input_thread(rtlsdr_dev_t *device) {
             cout << "TRYB SZUKANIA GATUNKU WLACZONY (cel: " << cel_gatunek << ")" << endl;
         }
         else if (wejscie_tekst == "m0") {
+            lock_guard<mutex> lock(state_mutex);
             tryb_pracy = 0;
             cout << "AUTOMATYKA WYLACZONA (Tryb reczny)" << endl;
         }
@@ -105,7 +206,9 @@ void input_thread(rtlsdr_dev_t *device) {
                 // Próba odczytania tego jako częstotliwości
                 double input_mhz = stod(wejscie_tekst);
                 int new_freq = (int)(input_mhz * 1000000);
+                lock_guard<mutex> lock(state_mutex);
                 rtlsdr_set_center_freq(device, new_freq);
+                frequency = new_freq;
                 cout << "Zmieniono stacje na: " << input_mhz << " MHz" << endl;
                 tryb_pracy = 0;
             } catch (...) {
@@ -158,6 +261,9 @@ int main() {
     thread console_thread(input_thread, device);
     console_thread.detach();
 
+    thread http_thread(http_server_thread);
+    http_thread.detach();
+
     WavWriter wav("drugie_nagranie.wav");
 
     SOCKET feedback_socket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -187,18 +293,29 @@ int main() {
             int kat, podkat;
             sscanf(recv_buf, "%d,%d", &kat, &podkat);
 
+            {
+                lock_guard<mutex> lock(state_mutex);
+                ostatni_kat = kat;
+                ostatni_podkat = podkat;
+            }
+
             if (tryb_pracy == 1 && podkat == 1) {
-                cout << "!!! REKLAMA WYKRYTA !!! Przełączam na następną stację..." << endl;
+                cout << "REKLAMA WYKRYTA!!! Przelaczam na nastepna stacje..." << endl;
                 aktualna_stacja_idx = (aktualna_stacja_idx + 1) % stacje.size();
                 rtlsdr_set_center_freq(device, stacje[aktualna_stacja_idx]);
+                lock_guard<mutex> lock(state_mutex);
+                frequency = stacje[aktualna_stacja_idx];
             }
 
             if (tryb_pracy == 2 && podkat != cel_gatunek) {
                 cout << "To nie jest szukany gatunek. Szukam dalej..." << endl;
                 aktualna_stacja_idx = (aktualna_stacja_idx + 1) % stacje.size();
                 rtlsdr_set_center_freq(device, stacje[aktualna_stacja_idx]);
+                lock_guard<mutex> lock(state_mutex);
+                frequency = stacje[aktualna_stacja_idx];
             } else if (tryb_pracy == 2 && podkat == cel_gatunek) {
-                cout << "ZNALAZŁEM! Zostajemy na tej stacji." << endl;
+                cout << "ZNALAZLEM! Zostajemy na tej stacji." << endl;
+                lock_guard<mutex> lock(state_mutex);
                 tryb_pracy = 0; // Wracamy do trybu normalnego
             }
         }
