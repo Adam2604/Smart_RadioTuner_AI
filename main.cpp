@@ -31,6 +31,7 @@ int aktualna_stacja_idx = 0;
 int tryb_pracy = 0; // 1: Anty-Reklama, 2: Szukanie Gatunku
 int cel_gatunek = -1;
 int ostatni_kat = -1, ostatni_podkat = -1;
+int reklama_counter = 0; // licznik kolejnych detekcji reklam
 mutex state_mutex;
 
 void demodulate_fm(const vector<uint8_t>& input_iq, vector<float>& output_audio) {
@@ -299,12 +300,21 @@ int main() {
                 ostatni_podkat = podkat;
             }
 
-            if (tryb_pracy == 1 && podkat == 1) {
-                cout << "REKLAMA WYKRYTA!!! Przelaczam na nastepna stacje..." << endl;
-                aktualna_stacja_idx = (aktualna_stacja_idx + 1) % stacje.size();
-                rtlsdr_set_center_freq(device, stacje[aktualna_stacja_idx]);
-                lock_guard<mutex> lock(state_mutex);
-                frequency = stacje[aktualna_stacja_idx];
+            if (tryb_pracy == 1) {
+                if (podkat == 1) {
+                    reklama_counter++;
+                    cout << "REKLAMA WYKRYTA (" << reklama_counter << "/2)..." << endl;
+                    if (reklama_counter >= 2) {
+                        cout << "Dwie reklamy z rzedu! Przelaczam na nastepna stacje..." << endl;
+                        aktualna_stacja_idx = (aktualna_stacja_idx + 1) % stacje.size();
+                        rtlsdr_set_center_freq(device, stacje[aktualna_stacja_idx]);
+                        lock_guard<mutex> lock(state_mutex);
+                        frequency = stacje[aktualna_stacja_idx];
+                        reklama_counter = 0;
+                    }
+                } else {
+                    reklama_counter = 0; // reset licznika gdy nie ma reklamy
+                }
             }
 
             if (tryb_pracy == 2 && podkat != cel_gatunek) {
